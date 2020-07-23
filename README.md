@@ -20,5 +20,7 @@ In SC18: International Conference for High Performance Computing, Networking, St
 
 ### Installation
 
-In each of the subfolders there are separate installation instructions depending on the environment.
+The installation can be done directly from R, e.g. using the devtools package:
 
+library(devtools)
+install_github("lisa-gm/SQUIC_R")
