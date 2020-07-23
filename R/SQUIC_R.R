@@ -164,7 +164,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
     log <- log[3:length(log)-1]
     
     # if TRUE: delete output files, delete later.
-    k = FALSE
+    k = TRUE
     if(k == TRUE){
       file.remove(c(X_loc, W_loc, X0_loc, W0_loc))
     } else {
