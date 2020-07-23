@@ -24,5 +24,5 @@ The installation can be done directly from R, e.g. using the devtools package:
 
 ```
 library(devtools)
-install_github("lisa-gm/SQUIC_R")
+install_github("lisa-gm/SQUIC")
 ```
