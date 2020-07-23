@@ -73,6 +73,9 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   } else if(Sys.info()[["sysname"]] == "Darwin" && grepl("17", Sys.info()[["release"]])){
     sys_path <- "libs/osx/darwin17"
     squic_exe <- system.file(sys_path, "SQUIC_CMD", package = "SQUIC", mustWork = TRUE)
+  } else if(Sys.info()[["sysname"]] == "Linux"){
+    sys_path <- "libs/linux"
+    squic_exe <- system.file(sys_path, "SQUIC_CMD", package = "SQUIC", mustWork = TRUE)
   } else {
     warning("platform not suitable!")
   }
