@@ -8,32 +8,32 @@ SQUIC(
   Y = NULL,
   lambda = 0,
   X_pattern = NULL,
-  max_iter_in = 1,
-  drop_tol_in = 1e-06,
-  term_tol_in = 1e-06,
+  max_iter = 1,
+  drop_tol = 1e-06,
+  term_tol = 1e-06,
   X_init = NULL,
   W_init = NULL,
-  verbose_in = 0
+  verbose = 1
 )
 }
 \arguments{
-\item{Y}{Input data, expects a matrix of dimension p x n, where each sample corresponds to one row of length p and a total number of n samples.}
+\item{Y}{Input data, expects a matrix of dimension p x n, where each sample corresponds to one row of p random variables and a total number of n samples.}
 
-\item{lambda_1}{Regularization parameter. It can either be a non-negative scalar. Then each entry of X will be penalized in the same way with this value. Or it can be a matrix of the same dimension as X, that is p by p, with non-negative values. Then each entry X_ij will be penalised by the value of ij-th entry of the matrix.}
+\item{lambda}{Regularization parameter. Non-negative scalar. Each entry of X will be penalized in the same way with this value. Can be adapted for certain entries using the X_pattern parameter}
 
-\item{lambda_2}{... Optional parameter that determines if}
-
-\item{X0}{Optimal parameter. Matrix with a sparse initial guess of the inverse covariance matrix. Defaults to the identity matrix. Needs to be given in coo format.}
-
-\item{W0}{Optimal parameter. Matrix with a sparse initial guess of the covariance matrix. Defaults to the identity matrix. Needs to be given in coo format.}
+\item{X_pattern}{Optional matrix parameter that determines if certain entries in the inverse covariance matrix should be penalised differently. Needs to be given in coo format. See details for further information.}
 
 \item{max_iter}{Maximum number of iterations.}
 
-\item{drop_tol}{Convergence threshold. Defaults to 1e-5.}
+\item{drop_tol}{Drop out tolerance threshold. Defaults to 1e-6.}
 
-\item{term_tol}{Convergence threshold. Defaults to 1e-5}
+\item{term_tol}{Terminal tolerence threshold. Defaults to 1e-6.}
 
 \item{verbose}{Integer value. Defining the verbosity of the print statistics. The higher the value the more detailed the output gets. The value range is from: ... Defaults to zero.}
+
+\item{X0}{Optional parameter. Matrix with a sparse initial guess of the inverse covariance matrix. Needs to be given in coo format. Defaults to the identity matrix.}
+
+\item{W0}{Optional parameter. Matrix with a sparse initial guess of the covariance matrix. Needs to be given in coo format.Defaults to the identity matrix.}
 }
 \value{
 X Estimated sparse inverse covariance matrix
@@ -46,11 +46,17 @@ It returns an estimate of the sparse covariance matrix W and its inverse X of a 
 }
 \details{
 R version of SQUIC.
-The higher the values are for lambda_1 the more sparsity is enforced. Possible source of how to choose lambda. 
+The higher the values are for lambda the more sparsity is enforced. Possible source of how to choose lambda?
 
+Penalty terms: Each entry of the covariance is penalised by the scalar value lambda. In order to individually penalise a particular entry X_ij of the inverse covariance matrix the 
+X_pattern matrix can be used. To not penalise an entry X_ij at all, one has to specify -lambda for this entry as the penalty term is internally computed as lambda * 1 * 1^T - X_pattern. 
 
 The optional parameters X0 and W0 are for sparse initial guesses of X and W. 
-They need to be given in COO-Format, therefore they each contain 3 lists. As these matrices are symmetric the function only requires the lower triangular part. If not specified they will default to identity matrices.
+They need to be given in COO-Format. Even though they are symmetric the all non-zero entries have to be specified. If no initial guess if known they will default to identity matrices.
+}
+\examples{
+SQUIC(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1)
+SQUIC()
 }
 \references{
 Large-scale Sparse Inverse Covariance Matrix Estimation, M.Bollhöfer, A. Eftekhari, S. Scheidegger, O. Schenk \url{https://epubs.siam.org/doi/abs/10.1137/17M1147615?journalCode=sjoce3}

@@ -67,21 +67,23 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   }
   
   # CHOOSE EXECUTABLE DEP. ON PLATFORM
+  # OSX
   if(Sys.info()[["sysname"]] == "Darwin" && grepl("19", Sys.info()[["release"]])){
     sys_path <- "libs/osx/darwin19"
     squic_exe <- system.file(sys_path, "SQUIC_CMD", package = "SQUIC", mustWork = TRUE)
   } else if(Sys.info()[["sysname"]] == "Darwin" && grepl("17", Sys.info()[["release"]])){
     sys_path <- "libs/osx/darwin17"
     squic_exe <- system.file(sys_path, "SQUIC_CMD", package = "SQUIC", mustWork = TRUE)
+  # LINUX  
   } else if(Sys.info()[["sysname"]] == "Linux"){
     sys_path <- "libs/linux"
     squic_exe <- system.file(sys_path, "SQUIC_CMD", package = "SQUIC", mustWork = TRUE)
+  # WINDOWS: ifelse(){}
   } else {
     warning("platform not suitable!")
   }
-  # windows: ifelse(){}
-  # linux: ifelse(){}
-  
+ 
+
   # CALL SQUIC, first set path
   old_wd <- getwd()
   lib_wd <- paste(pkg_path, "/", sys_path, sep = "")
@@ -166,7 +168,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
     # if TRUE: delete output files, delete later.
     k = TRUE
     if(k == TRUE){
-      file.remove(c(X_loc, W_loc, X0_loc, W0_loc))
+      unlink(res_folder, recursive = TRUE)
     } else {
       print("result files are stored in the following directory ")
       print(res_folder)
