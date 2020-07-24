@@ -26,3 +26,11 @@ The installation can be done directly from R, e.g. using the devtools package:
 library(devtools)
 install_github("lisa-gm/SQUIC")
 ```
+or through downloading the SQUIC_R.tar.gz file from the github release folder which can then be installed using
+
+``` 
+R CMD INSTALL SQUIC_R.tar.gz
+```
+
+from the command line.
+
