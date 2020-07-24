@@ -35,29 +35,18 @@ usethis::use_package("Matrix")
 #' @keywords Sparse Covariance Matrix Estimation
 #' @importFrom Matrix sparseMatrix
 #' @export
-#' @examples SQUIC(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1)
+#' @examples SQUIC(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1, del_files = TRUE)
 #' SQUIC()
 
-SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1){
+SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1, del_files = TRUE){
 
   pkg_path = system.file(package = "SQUIC")
   
-  ########################################################################################333
-  # FOR PACKAGE BUILDING: automatically load sample Y file if no data is provided
-  if(is.null(Y)){
-    input_file <- system.file("data", "sample_data_10x100.mat", package = "SQUIC", mustWork = TRUE)
-    p = 10
-    n = 100
-  } else{
-    # get p and n from Y
-    # p: number of random variables
-    p = ncol(Y)
-    # n: number of samples
-    n = nrow(Y)
-    # for console executable: write Y to file in R --> executable will get it from file
-    input_file = file.path(pkg_path, "libs", "Y_file.mat")
-    write.table(Y, input_file, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
-  }
+  # creating paths to files for all file data, that is input and output : X, W, info.log
+  # make new directory w/ timestamp for results in original working directory
+  old_wd <- getwd()
+  res_folder <- paste(old_wd, "/squic_out_", format(Sys.time(), "%d_%m_%y_%H_%M_%S"), sep = "")
+  dir.create(res_folder)
   
   #######################################################################
   # SYSTEM REQUIREMENTS
@@ -85,9 +74,26 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
  
 
   # CALL SQUIC, first set path
-  old_wd <- getwd()
   lib_wd <- paste(pkg_path, "/", sys_path, sep = "")
   setwd(lib_wd)
+  
+  # WRITING MATRIX PARAMETERS TO FILE FOR CMD EXECUTABLE
+  ########################################################################################333
+  # FOR PACKAGE BUILDING: automatically load sample Y file if no data is provided
+  if(is.null(Y)){
+    input_file <- system.file("data", "sample_data_10x100.mat", package = "SQUIC", mustWork = TRUE)
+    p = 10
+    n = 100
+  } else{
+    # get p and n from Y
+    # p: number of random variables
+    p = ncol(Y)
+    # n: number of samples
+    n = nrow(Y)
+    # for console executable: write Y to file in R --> executable will get it from file
+    input_file = file.path(res_folder, "Y_file.mat")
+    write.table(Y, input_file, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
+  }
   
   #######################################################################
   # handling optional parameters
@@ -97,7 +103,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
     LambdaMatrix_file = 'NULL'
   } else {
     # save sparse coo matrix to file
-    LambdaMatrix_file = file.path(pkg_path, "libs", "lambda_matrix.dat")
+    LambdaMatrix_file = file.path(res_folder, "lambda_matrix.dat")
     # TODO: double check that summary() always gives the right pattern
     write.table(summary(X_pattern), LambdaMatrix_file, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
   }
@@ -106,7 +112,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   if(is.null(X_init)){
     X0_loc = 'NULL'
   } else {
-    X0_loc = file.path(pkg_path, "libs", "X0_loc.dat")
+    X0_loc = file.path(res_folder, "X0_loc.dat")
     # expects X_init to be in sparse matrix format
     write.table(summary(X_init), X0_loc, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
   }  
@@ -115,7 +121,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   if(is.null(W_init)){
     W0_loc = 'NULL'
   } else {
-    X0_loc = file.path(pkg_path, "libs", "W0_loc.dat")
+    X0_loc = file.path(res_folder, "W0_loc.dat")
     # expects X_init to be in sparse matrix format
     write.table(summary(W_init), X0_loc, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
   }
@@ -124,11 +130,6 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   # [integer:index_offset] Offset of indexing
   index_offset=1
   
-  # creating paths to files for output data : X, W, info.log
-  # make new directory w/ timestamp for results in original working directory
-  res_folder <- paste(old_wd, "/squic_out_", format(Sys.time(), "%d_%m_%y_%H_%M_%S"), sep = "")
-  dir.create(res_folder)
-
   X_loc <- file.path(res_folder, "X.dat")
   file.create(X_loc)
   W_loc <- file.path(res_folder, "W.dat")
@@ -165,9 +166,8 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
     log <- log_all[log_all != ""]
     log <- log[3:length(log)-1]
     
-    # if TRUE: delete output files, delete later.
-    k = TRUE
-    if(k == TRUE){
+    # if del_files == TRUE: delete output folder, otherwise stays.
+    if(del_files == TRUE){
       unlink(res_folder, recursive = TRUE)
     } else {
       print("result files are stored in the following directory ")
