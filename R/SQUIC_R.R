@@ -11,20 +11,20 @@ usethis::use_package("Matrix")
 #' It returns an estimate of the sparse covariance matrix W and its inverse X of a data matrix Y. 
 #' 
 #' @param Y Input data, expects a matrix of dimension p x n, where each sample corresponds to one row of p random variables and a total number of n samples.
-#' @param lambda Regularization parameter. Non-negative scalar. Each entry of X will be penalized in the same way with this value. Can be adapted for certain entries using the X_pattern parameter
-#' @param X_pattern Optional matrix parameter that determines if certain entries in the inverse covariance matrix should be penalised differently. Needs to be given in coo format. See details for further information.
+#' @param lambda Regularization parameter. Non-negative scalar or even positive? Each entry of X will be penalized in the same way with this value. Can be adapted for certain entries using the X_pattern parameter
+#' @param X_pattern Optional matrix parameter. Lambda = Lambda_matrix + lambda_scala x (1-pattern(Lambda_matrix) ) (update later). Needs to be given in coo format. See details for further information.
 #' @param X0 Optional parameter. Matrix with a sparse initial guess of the inverse covariance matrix. Needs to be given in coo format. Defaults to the identity matrix.
 #' @param W0 Optional parameter. Matrix with a sparse initial guess of the covariance matrix. Needs to be given in coo format.Defaults to the identity matrix.
 #' @param max_iter Maximum number of iterations.
-#' @param drop_tol Drop out tolerance threshold. Defaults to 1e-6.
-#' @param term_tol Terminal tolerence threshold. Defaults to 1e-6.
+#' @param drop_tol Drop out tolerance threshold for inverse of the inverse covariance matrix. Defaults to 1e-6.
+#' @param term_tol Convergence threshold for iteration. Defaults to 1e-6.
 #' @param verbose Integer value. Defining the verbosity of the print statistics. The higher the value the more detailed the output gets. The value range is from: ... Defaults to zero.
 #' @return X Estimated sparse inverse covariance matrix
 #' @return W Estimated sparse inverse of the inverse covariance matrix
 #' @details R version of SQUIC.
 #' The higher the values are for lambda the more sparsity is enforced. Possible source of how to choose lambda?
 #' 
-#' Penalty terms: Each entry of the covariance is penalised by the scalar value lambda. In order to individually penalise a particular entry X_ij of the inverse covariance matrix the 
+#' Penalty terms: (update this later). Each entry of the covariance is penalised by the scalar value lambda. In order to individually penalise a particular entry X_ij of the inverse covariance matrix the 
 #' X_pattern matrix can be used. To not penalise an entry X_ij at all, one has to specify -lambda for this entry as the penalty term is internally computed as lambda * 1 * 1^T - X_pattern. 
 #' 
 #' The optional parameters X0 and W0 are for sparse initial guesses of X and W. 
@@ -35,7 +35,7 @@ usethis::use_package("Matrix")
 #' @keywords Sparse Covariance Matrix Estimation
 #' @importFrom Matrix sparseMatrix
 #' @export
-#' @examples SQUIC(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1, del_files = TRUE)
+#' @examples SQUIC(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1, del_files = TRUE). TODO: write an example that compares to 
 #' SQUIC()
 
 SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1e-6, term_tol=1e-6, X_init = NULL, W_init = NULL, verbose=1, del_files = TRUE){
@@ -45,7 +45,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   # creating paths to files for all file data, that is input and output : X, W, info.log
   # make new directory w/ timestamp for results in original working directory
   old_wd <- getwd()
-  res_folder <- paste(old_wd, "/squic_out_", format(Sys.time(), "%d_%m_%y_%H_%M_%S"), sep = "")
+  res_folder <- paste(old_wd, "/squic_out_", format(Sys.time(), "%d_%m_%y_%H_%M_%OS2"), sep = "")
   dir.create(res_folder)
   
   #######################################################################
@@ -140,10 +140,11 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   #######################################################################
   # SYSTEM CALL to squic_cmd
   args=paste(p,n, input_file, lambda, LambdaMatrix_file, max_iter, drop_tol, term_tol, X0_loc, W0_loc, index_offset, verbose, X_loc, W_loc, log_loc)
-  #print(squic_exe)
-  #print(args)
-  system2(squic_exe, args = args)
 
+  system2(squic_exe, args = args)
+  print(squic_exe)
+  print(args)
+  
   # just for testing, delete later.
   X = 0
   W = 0
@@ -170,7 +171,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
     if(del_files == TRUE){
       unlink(res_folder, recursive = TRUE)
     } else {
-      print("result files are stored in the following directory ")
+      print("result files are stored in your current working directory: ")
       print(res_folder)
     }
   }
