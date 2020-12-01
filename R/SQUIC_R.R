@@ -2,6 +2,7 @@
 # import Matrix package, automatically updates DESCRIPTION file
 # is this the right spot?
 usethis::use_package("Matrix")
+usethis::use_package("data.table")
 
 ##########################################################
 # generate some sort of description, need to update this later
@@ -92,7 +93,8 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
     n = nrow(Y)
     # for console executable: write Y to file in R --> executable will get it from file
     input_file = file.path(res_folder, "Y_file.mat")
-    write.table(Y, input_file, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
+    # replace by fwrite to make it faster
+    data.table::fwrite(Y, input_file, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
   }
   
   #######################################################################
@@ -105,7 +107,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
     # save sparse coo matrix to file
     LambdaMatrix_file = file.path(res_folder, "lambda_matrix.dat")
     # TODO: double check that summary() always gives the right pattern
-    write.table(summary(X_pattern), LambdaMatrix_file, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
+    data.table::fwrite(summary(X_pattern), LambdaMatrix_file, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
   }
   
   # initial guess X_init
@@ -114,7 +116,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   } else {
     X0_loc = file.path(res_folder, "X0_loc.dat")
     # expects X_init to be in sparse matrix format
-    write.table(summary(X_init), X0_loc, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
+    data.table::fwrite(summary(X_init), X0_loc, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
   }  
   
   # initial guess W_init
@@ -123,12 +125,17 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   } else {
     X0_loc = file.path(res_folder, "W0_loc.dat")
     # expects X_init to be in sparse matrix format
-    write.table(summary(W_init), X0_loc, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
+    data.table::fwrite(summary(W_init), X0_loc, append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
   }
   
   #######################################################################
   # [integer:index_offset] Offset of indexing
   index_offset=1
+  
+  verbose_R = ""
+  if(verbose == 0){
+    verbose_R = NULL
+  }
   
   X_loc <- file.path(res_folder, "X.dat")
   file.create(X_loc)
@@ -141,7 +148,7 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   # SYSTEM CALL to squic_cmd
   args=paste(p,n, input_file, lambda, LambdaMatrix_file, max_iter, drop_tol, term_tol, X0_loc, W0_loc, index_offset, verbose, X_loc, W_loc, log_loc)
 
-  system2(squic_exe, args = args)
+  system2(squic_exe, args = args, stdout = verbose_R)
   print(squic_exe)
   print(args)
   
@@ -153,8 +160,8 @@ SQUIC <- function(Y = NULL, lambda = 0.0, X_pattern=NULL, max_iter=1, drop_tol=1
   if(k==TRUE){
     
     # collect data from file
-    X <- read.table(X_loc,  sep="\t", header=FALSE)
-    W <- read.table(W_loc,  sep="\t", header=FALSE)
+    X <- data.table::fread(X_loc,  sep="\t", header=FALSE)
+    W <- data.table::fread(W_loc,  sep="\t", header=FALSE)
     
     # generate sparse matrices X,W
     # offset already included

@@ -10,7 +10,7 @@ run_demo <- function(lambda = 0.2, max_iter = 1000,
                      del_files = TRUE){
   
   Y_file <- system.file("data", "sample_data_10x100.mat", package = "SQUIC", mustWork = TRUE)
-  Y <- read.table(Y_file, header = FALSE)
+  Y <- data.table::fread(Y_file, header = FALSE)
 
   squic_res <- SQUIC(Y = Y, lambda = lambda, X_pattern=NULL, max_iter=max_iter, 
                      drop_tol=drop_tol, term_tol=term_tol, 
